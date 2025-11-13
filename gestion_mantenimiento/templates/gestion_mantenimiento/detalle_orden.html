@@ -1,0 +1,110 @@
+{% extends "gestion_mantenimiento/base.html" %}
+
+{% block title %}Detalle Orden #{{ orden.id }} - MantenimientoFlow{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="text-center mb-20">
+        <h1>📋 Detalle de Orden #{{ orden.id }}</h1>
+        <p class="form-text">{{ orden.titulo }}</p>
+    </div>
+
+    <!-- Información de la orden -->
+    <div class="grid-2">
+        <div class="card">
+            <h3>📊 Información General</h3>
+            <p><strong>Título:</strong> {{ orden.titulo }}</p>
+            <p><strong>Fecha creación:</strong> {{ orden.fecha_creacion|date:"d/m/Y H:i" }}</p>
+            <p><strong>Prioridad:</strong> 
+                <span class="badge 
+                    {% if orden.prioridad == 'Alta' %}badge-danger
+                    {% elif orden.prioridad == 'Media' %}badge-warning
+                    {% else %}badge-success{% endif %}">
+                    {{ orden.prioridad }}
+                </span>
+            </p>
+            <p><strong>Estado:</strong> 
+                <span class="badge 
+                    {% if orden.estado == 'Pendiente' %}badge-warning
+                    {% elif orden.estado == 'En Progreso' %}badge-info
+                    {% else %}badge-success{% endif %}">
+                    {{ orden.estado }}
+                </span>
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>👥 Asignaciones</h3>
+            <p><strong>Creada por:</strong> {{ orden.operario_creador.username }}</p>
+            <p><strong>Asignada a:</strong> 
+                {% if orden.operario_asignado %}
+                    {{ orden.operario_asignado.username }}
+                {% else %}
+                    <em class="text-muted">Sin asignar</em>
+                {% endif %}
+            </p>
+            {% if orden.fecha_cierre_real %}
+            <p><strong>Fecha cierre real:</strong> {{ orden.fecha_cierre_real|date:"d/m/Y H:i" }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Descripción -->
+    <div class="card">
+        <h3>📝 Descripción de la Falla</h3>
+        <p style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+            {{ orden.descripcion_falla }}
+        </p>
+    </div>
+
+    <!-- Consumos registrados -->
+    <div class="card">
+        <h3>📦 Suministros Consumidos</h3>
+        {% if consumos %}
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Suministro</th>
+                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid #dee2e6;">Cantidad</th>
+                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid #dee2e6;">Fecha</th>
+                    <th style="padding: 10px; text-align: right; border-bottom: 2px solid #dee2e6;">Registrado por</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for consumo in consumos %}
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 10px;">{{ consumo.suministro.nombre }}</td>
+                    <td style="padding: 10px; text-align: center;">{{ consumo.cantidad_usada }}</td>
+                    <td style="padding: 10px; text-align: center;">{{ consumo.fecha_consumo|date:"d/m/Y H:i" }}</td>
+                    <td style="padding: 10px; text-align: right;">{{ consumo.operario_registra.username }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-center" style="padding: 20px; color: #666;">
+            No se han registrado consumos para esta orden.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Botones de acción -->
+    <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'gestion_mantenimiento:lista_ordenes' %}" class="btn btn-secondary">
+            ↩️ Volver al Listado
+        </a>
+        
+        {% if user.groups.all.0.name == "Jefe de Taller" or user.is_superuser %}
+            <a href="{% url 'gestion_mantenimiento:asignar_orden' orden.id %}" class="btn btn-warning">
+                ✏️ Asignar/Editar
+            </a>
+        {% endif %}
+        
+        {% if perms.gestion_mantenimiento.delete_ordendetrabajo %}
+            <a href="{% url 'gestion_mantenimiento:eliminar_orden' orden.id %}" class="btn btn-danger">
+                🗑️ Eliminar
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

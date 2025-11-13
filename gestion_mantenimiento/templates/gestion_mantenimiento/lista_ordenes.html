@@ -1,0 +1,112 @@
+{% extends "gestion_mantenimiento/base.html" %}
+
+{% block title %}Órdenes de Trabajo - MantenimientoFlow{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="text-center mb-20">
+        <h1>📋 Órdenes de Trabajo</h1>
+        <p class="form-text">Sistema de Gestión de Mantenimiento - Rol: {{ rol_usuario }}</p>
+    </div>
+
+    <!-- Acceso rápido a última orden vista -->
+    {% if ultima_orden_vista %}
+    <div style="background-color: #e7f3ff; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #007bff;">
+        <strong>📌 Acceso rápido:</strong> 
+        <a href="?ultima_orden_vista={{ ultima_orden_vista }}#orden-{{ ultima_orden_vista }}">
+            Ver última orden vista (ID: {{ ultima_orden_vista }})
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Filtros -->
+    <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+        <strong>🔍 Filtrar por estado:</strong>
+        <div style="margin-top: 10px;">
+            <a href="?" class="btn btn-secondary {% if not estado_filtro %}active{% endif %}">Todos</a>
+            <a href="?estado=Pendiente" class="btn btn-warning {% if estado_filtro == 'Pendiente' %}active{% endif %}">Pendientes</a>
+            <a href="?estado=En Progreso" class="btn btn-info {% if estado_filtro == 'En Progreso' %}active{% endif %}">En Progreso</a>
+            <a href="?estado=Cerrada" class="btn btn-success {% if estado_filtro == 'Cerrada' %}active{% endif %}">Cerradas</a>
+        </div>
+    </div>
+
+    <!-- Lista de órdenes -->
+    {% for orden in ordenes %}
+    <div class="orden-card prioridad-{{ orden.prioridad|lower }}" id="orden-{{ orden.id }}">
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 10px;">{{ orden.titulo }}</h3>
+                <p><strong>📅 Fecha:</strong> {{ orden.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                <p>
+                    <strong>🚨 Prioridad:</strong> 
+                    <span class="badge 
+                        {% if orden.prioridad == 'Alta' %}badge-danger
+                        {% elif orden.prioridad == 'Media' %}badge-warning
+                        {% else %}badge-success{% endif %}">
+                        {{ orden.prioridad }}
+                    </span>
+                </p>
+                <p>
+                    <strong>📊 Estado:</strong> 
+                    <span class="badge 
+                        {% if orden.estado == 'Pendiente' %}badge-warning
+                        {% elif orden.estado == 'En Progreso' %}badge-info
+                        {% else %}badge-success{% endif %}">
+                        {{ orden.estado }}
+                    </span>
+                </p>
+            </div>
+            <div>
+                <p><strong>👤 Creada por:</strong> {{ orden.operario_creador.username }}</p>
+                <p>
+                    <strong>🔧 Asignada a:</strong> 
+                    {% if orden.operario_asignado %}
+                        {{ orden.operario_asignado.username }}
+                    {% else %}
+                        <em class="text-muted">Sin asignar</em>
+                    {% endif %}
+                </p>
+                {% if orden.fecha_cierre_real %}
+                <p><strong>✅ Cerrada:</strong> {{ orden.fecha_cierre_real|date:"d/m/Y H:i" }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <p><strong>📝 Descripción:</strong></p>
+            <p style="background: #f8f9fa; padding: 10px; border-radius: 4px; border-left: 3px solid #007bff;">
+                {{ orden.descripcion_falla }}
+            </p>
+        </div>
+        
+        <!-- Botones de acción CORREGIDOS -->
+        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="{% url 'gestion_mantenimiento:detalle_orden' orden.id %}" class="btn btn-primary">
+                👁️ Ver Detalle
+            </a>
+            
+            <!-- Jefes y Admins pueden asignar/editar -->
+            {% if "Jefe de Taller" in user.groups.all|join:", " or user.is_superuser or "Administrador" in user.groups.all|join:", " %}
+                <a href="{% url 'gestion_mantenimiento:asignar_orden' orden.id %}" class="btn btn-warning">
+                    ✏️ Asignar/Editar
+                </a>
+            {% endif %}
+            
+            <!-- Solo Superusers y Administradores pueden eliminar -->
+            {% if user.is_superuser or "Administrador" in user.groups.all|join:", " or perms.gestion_mantenimiento.delete_ordendetrabajo %}
+                <a href="{% url 'gestion_mantenimiento:eliminar_orden' orden.id %}" class="btn btn-danger">
+                    🗑️ Eliminar
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center" style="padding: 40px; color: #666;">
+        <h3>📭 No hay órdenes de trabajo registradas</h3>
+        {% if user.groups.all.0.name == "Operario" %}
+        <p style="margin-top: 15px;">¿Desea <a href="{% url 'gestion_mantenimiento:crear_orden' %}" class="btn btn-success">crear una nueva orden</a>?</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

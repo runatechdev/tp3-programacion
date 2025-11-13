@@ -1,0 +1,53 @@
+{% extends "gestion_mantenimiento/base.html" %}
+
+{% block title %}Crear Orden - MantenimientoFlow{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="card">
+        <div class="text-center mb-20">
+            <h1>📝 Crear Nueva Orden de Trabajo</h1>
+            <p class="form-text">Complete el formulario para reportar una falla</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}" class="form-label">
+                    {{ field.label }}
+                    {% if field.field.required %}<span style="color: red;">*</span>{% endif %}
+                </label>
+                {{ field }}
+                
+                {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                
+                {% if field.errors %}
+                <div class="error-list">
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-success">💾 Guardar Orden</button>
+                <a href="{% url 'gestion_mantenimiento:lista_ordenes' %}" class="btn btn-secondary">❌ Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Información sobre validaciones -->
+    <div class="card mt-20">
+        <h4>📋 Información importante:</h4>
+        <ul style="margin-left: 20px; margin-top: 10px;">
+            <li>La descripción debe tener al menos <strong>20 caracteres</strong></li>
+            <li>Para prioridad <strong>ALTA</strong>, la descripción debe incluir palabras clave de urgencia como: "detenido", "bloqueado", "fuego", "urgente"</li>
+            <li>La fecha de creación se asignará automáticamente</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

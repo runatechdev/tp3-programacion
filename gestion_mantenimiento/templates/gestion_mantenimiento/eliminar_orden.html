@@ -1,0 +1,84 @@
+{% extends "gestion_mantenimiento/base.html" %}
+
+{% block title %}Eliminar Orden - MantenimientoFlow{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="card">
+        <div class="text-center mb-20">
+            <h1>🗑️ Eliminar Orden #{{ orden.id }}</h1>
+            <p class="form-text">Esta acción no se puede deshacer</p>
+        </div>
+
+        <!-- Información de la orden a eliminar -->
+        <div class="card" style="background: #f8d7da; border-left: 4px solid #dc3545;">
+            <h3>⚠️ ¿Está seguro que desea eliminar esta orden?</h3>
+            <div class="grid-2">
+                <div>
+                    <p><strong>ID:</strong> {{ orden.id }}</p>
+                    <p><strong>Título:</strong> {{ orden.titulo }}</p>
+                    <p><strong>Prioridad:</strong> 
+                        <span class="badge 
+                            {% if orden.prioridad == 'Alta' %}badge-danger
+                            {% elif orden.prioridad == 'Media' %}badge-warning
+                            {% else %}badge-success{% endif %}">
+                            {{ orden.prioridad }}
+                        </span>
+                    </p>
+                </div>
+                <div>
+                    <p><strong>Estado:</strong> 
+                        <span class="badge 
+                            {% if orden.estado == 'Pendiente' %}badge-warning
+                            {% elif orden.estado == 'En Progreso' %}badge-info
+                            {% else %}badge-success{% endif %}">
+                            {{ orden.estado }}
+                        </span>
+                    </p>
+                    <p><strong>Creada por:</strong> {{ orden.operario_creador.username }}</p>
+                    <p><strong>Fecha creación:</strong> {{ orden.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <p><strong>Descripción:</strong></p>
+                <p style="background: white; padding: 10px; border-radius: 4px;">
+                    {{ orden.descripcion_falla }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Mostrar consumos si existen -->
+        {% if orden.consumos.all %}
+        <div class="card mt-20" style="background: #fff3cd; border-left: 4px solid #ffc107;">
+            <h4>⚠️ Consumos asociados</h4>
+            <p>Esta orden tiene <strong>{{ orden.consumos.count }}</strong> registro(s) de consumo que también serán eliminados.</p>
+        </div>
+        {% endif %}
+
+        <form method="post" style="margin-top: 20px;">
+            {% csrf_token %}
+            
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Está ABSOLUTAMENTE seguro? Esta acción no se puede deshacer.')">
+                    🗑️ Sí, Eliminar Orden
+                </button>
+                <a href="{% url 'gestion_mantenimiento:lista_ordenes' %}" class="btn btn-secondary">
+                    ❌ Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="card mt-20">
+        <h4>📋 Información sobre la eliminación:</h4>
+        <ul style="margin-left: 20px; margin-top: 10px;">
+            <li>La orden y todos sus registros de consumo serán <strong>eliminados permanentemente</strong></li>
+            <li>Esta acción <strong>no se puede deshacer</strong></li>
+            <li>Los suministros consumidos <strong>NO serán restaurados</strong> al inventario</li>
+            <li>Se recomienda cerrar la orden en lugar de eliminarla, cuando sea posible</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

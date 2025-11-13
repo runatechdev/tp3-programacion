@@ -1,0 +1,61 @@
+{% extends "gestion_mantenimiento/base.html" %}
+
+{% block title %}Consumo de Suministros - MantenimientoFlow{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="card">
+        <div class="text-center mb-20">
+            <h1>📦 Registrar Consumo de Suministro</h1>
+            <p class="form-text">Registre los materiales utilizados en las órdenes de trabajo</p>
+        </div>
+
+        {% if not tiene_ordenes_asignadas %}
+        <div class="warning" style="padding: 15px; margin: 15px 0; border-radius: 5px;">
+            <strong>⚠️ Atención:</strong> No tiene órdenes asignadas abiertas. 
+            Solo puede registrar consumo en órdenes que le hayan sido asignadas y que estén en estado "Pendiente" o "En Progreso".
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}" class="form-label">
+                    {{ field.label }}
+                    {% if field.field.required %}<span style="color: red;">*</span>{% endif %}
+                </label>
+                {{ field }}
+                
+                {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                
+                {% if field.errors %}
+                <div class="error-list">
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-success">💾 Registrar Consumo</button>
+                <a href="{% url 'gestion_mantenimiento:lista_ordenes' %}" class="btn btn-secondary">❌ Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Información sobre el proceso -->
+    <div class="card mt-20">
+        <h4>ℹ️ Proceso de consumo:</h4>
+        <ul style="margin-left: 20px; margin-top: 10px;">
+            <li>Seleccione una orden de trabajo <strong>abierta</strong> que le haya sido asignada</li>
+            <li>Elija un suministro que tenga <strong>stock disponible</strong></li>
+            <li>La cantidad no puede exceder el stock disponible</li>
+            <li>El stock se actualizará automáticamente después del registro</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
