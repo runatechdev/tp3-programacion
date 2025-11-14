@@ -103,7 +103,7 @@ def lista_ordenes(request):
 # =============================================================================
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name='Operario').exists(), 
+@user_passes_test(lambda u: u.groups.filter(name='Operario').exists() or u.is_superuser, 
                  login_url='/login/', 
                  redirect_field_name=None)
 def crear_orden(request):
@@ -146,7 +146,7 @@ def crear_orden(request):
 # =============================================================================
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name='Operario').exists(), 
+@user_passes_test(lambda u: u.groups.filter(name='Operario').exists() or u.is_superuser, 
                  login_url='/login/', 
                  redirect_field_name=None)
 def consumo_suministro(request):
@@ -200,8 +200,8 @@ def asignar_orden(request, orden_id):
     """
     Vista para que los Jefes de Taller asignen órdenes y cambien estados
     """
-    # Verificar que el usuario sea Jefe de Taller
-    if not request.user.groups.filter(name='Jefe de Taller').exists():
+    # Verificar que el usuario sea Jefe de Taller o Administrador (superuser)
+    if not (request.user.groups.filter(name='Jefe de Taller').exists() or request.user.is_superuser):
         messages.error(request, '❌ No tienes permisos para acceder a esta función.')
         return HttpResponseForbidden("No tienes permisos para acceder a esta función.")
     
